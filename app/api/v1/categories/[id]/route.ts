@@ -6,11 +6,13 @@ import { UpdateCategoryInputSchema } from "@/src/lib/schemas/category.schema";
 import { updateCategory, softDeleteCategory } from "@/src/lib/services/category.service";
 import { AppError } from "@/src/lib/errors";
 
-type RouteContext = { params: Record<string, string> };
+type RouteContext = { params: Promise<Record<string, string>> };
 
 // PUT /api/v1/categories/:id — Admin only
 export const PUT = withAuth(
   withRoles(["ADMIN"], async (req: NextRequest, { params }: RouteContext) => {
+  const resolvedParams = await params;
+
     let body: unknown;
     try {
       body = await req.json();
@@ -27,7 +29,7 @@ export const PUT = withAuth(
     }
 
     try {
-      const category = await updateCategory(params.id, result.data);
+      const category = await updateCategory(resolvedParams.id, result.data);
       return successResponse(category);
     } catch (err) {
       if (AppError.isAppError(err)) return errorResponse(err.code, err.message, err.httpStatus);
@@ -40,8 +42,10 @@ export const PUT = withAuth(
 // DELETE /api/v1/categories/:id — Admin only
 export const DELETE = withAuth(
   withRoles(["ADMIN"], async (_req: NextRequest, { params }: RouteContext) => {
+  const resolvedParams = await params;
+
     try {
-      await softDeleteCategory(params.id);
+      await softDeleteCategory(resolvedParams.id);
       return new NextResponse(null, { status: 204 });
     } catch (err) {
       if (AppError.isAppError(err)) return errorResponse(err.code, err.message, err.httpStatus);

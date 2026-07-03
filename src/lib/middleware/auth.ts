@@ -15,7 +15,7 @@ export interface AuthenticatedRequest extends NextRequest {
 
 type AuthHandler = (
   req: AuthenticatedRequest,
-  context: { params: Record<string, string> }
+  context: { params: Promise<Record<string, string>> }
 ) => Promise<NextResponse> | NextResponse;
 
 /**
@@ -31,7 +31,7 @@ type AuthHandler = (
 export function withAuth(handler: AuthHandler) {
   return async (
     req: NextRequest,
-    context: { params: Record<string, string> }
+    context: { params: Promise<Record<string, string>> }
   ): Promise<NextResponse> => {
     // Try pre-verified headers first (set by middleware.ts)
     const userId = req.headers.get("x-user-id");

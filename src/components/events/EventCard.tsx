@@ -42,7 +42,7 @@ export function EventCard({ id, title, startDateTime, bannerImageUrl, venue, cat
   const soldOut = isSoldOut(ticketTypes);
 
   return (
-    <Link href={`/events/${id}`} className="group block rounded-lg border bg-card overflow-hidden hover:shadow-md transition-shadow">
+    <Link href={`/events/${id}`} className="group block rounded-xl border border-border/50 bg-card overflow-hidden hover-card-up shadow-sm">
       {/* Banner */}
       <div className="relative aspect-video bg-muted overflow-hidden">
         {bannerImageUrl ? (

@@ -4,14 +4,16 @@ import { withAuth, type AuthenticatedRequest } from "@/src/lib/middleware/auth";
 import { getBookingById } from "@/src/lib/services/booking.service";
 import { AppError } from "@/src/lib/errors";
 
-type RouteContext = { params: Record<string, string> };
+type RouteContext = { params: Promise<Record<string, string>> };
 
 // GET /api/v1/bookings/:id — owner or Admin
 export const GET = withAuth(async (req: NextRequest, { params }: RouteContext) => {
+  const resolvedParams = await params;
+
   const user = (req as AuthenticatedRequest).user;
 
   try {
-    const booking = await getBookingById(params.id, user.id, user.role);
+    const booking = await getBookingById(resolvedParams.id, user.id, user.role);
     return successResponse(booking);
   } catch (err) {
     if (AppError.isAppError(err)) return errorResponse(err.code, err.message, err.httpStatus);

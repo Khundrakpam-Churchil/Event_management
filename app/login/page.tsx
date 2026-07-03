@@ -12,7 +12,7 @@ import { useAuthStore } from "@/src/lib/stores/auth.store";
 export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const returnUrl = searchParams.get("returnUrl") ?? "/dashboard";
+  const returnUrl = searchParams.get("returnUrl") ?? "/";
   const { setAuth } = useAuthStore();
   const [serverError, setServerError] = useState<string | null>(null);
 
@@ -32,7 +32,12 @@ export default function LoginPage() {
         data
       );
       setAuth(res.data.user, res.data.token);
-      router.push(returnUrl);
+      
+      if (res.data.user.role === "ADMIN") {
+        router.push("/admin");
+      } else {
+        router.push(returnUrl);
+      }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Login failed. Please try again.";
       setServerError(message);

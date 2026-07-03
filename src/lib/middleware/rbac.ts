@@ -6,7 +6,7 @@ type Role = UserContext["role"];
 
 type AuthHandler = (
   req: AuthenticatedRequest,
-  context: { params: Record<string, string> }
+  context: { params: Promise<Record<string, string>> }
 ) => Promise<NextResponse> | NextResponse;
 
 /**
@@ -24,7 +24,7 @@ type AuthHandler = (
 export function withRoles(allowedRoles: Role[], handler: AuthHandler): AuthHandler {
   return async (
     req: AuthenticatedRequest,
-    context: { params: Record<string, string> }
+    context: { params: Promise<Record<string, string>> }
   ): Promise<NextResponse> => {
     const { role } = req.user;
 
@@ -45,9 +45,9 @@ export function withRoles(allowedRoles: Role[], handler: AuthHandler): AuthHandl
  * Import from auth.ts to avoid circular dependencies.
  */
 export function requireRoles(allowedRoles: Role[]) {
-  return (handler: AuthHandler): ((req: NextRequest, context: { params: Record<string, string> }) => Promise<NextResponse>) => {
+  return (handler: AuthHandler): ((req: NextRequest, context: { params: Promise<Record<string, string>> }) => Promise<NextResponse>) => {
     // We return a plain NextRequest handler; the caller must also apply withAuth
-    return async (req: NextRequest, context: { params: Record<string, string> }) => {
+    return async (req: NextRequest, context: { params: Promise<Record<string, string>> }) => {
       const user = (req as AuthenticatedRequest).user;
 
       if (!user) {

@@ -5,12 +5,14 @@ import { CreateTicketTypeInputSchema } from "@/src/lib/schemas/ticketType.schema
 import { listTicketTypes, createTicketType } from "@/src/lib/services/ticketType.service";
 import { AppError } from "@/src/lib/errors";
 
-type RouteContext = { params: Record<string, string> };
+type RouteContext = { params: Promise<Record<string, string>> };
 
 // GET /api/v1/events/:id/ticket-types — public
 export async function GET(_req: NextRequest, { params }: RouteContext) {
+  const resolvedParams = await params;
+
   try {
-    const ticketTypes = await listTicketTypes(params.id);
+    const ticketTypes = await listTicketTypes(resolvedParams.id);
     return successResponse(ticketTypes);
   } catch (err) {
     if (AppError.isAppError(err)) return errorResponse(err.code, err.message, err.httpStatus);
@@ -21,6 +23,8 @@ export async function GET(_req: NextRequest, { params }: RouteContext) {
 
 // POST /api/v1/events/:id/ticket-types — owner Organizer or Admin
 export const POST = withAuth(async (req: NextRequest, { params }: RouteContext) => {
+  const resolvedParams = await params;
+
   const user = (req as AuthenticatedRequest).user;
 
   let body: unknown;
@@ -39,7 +43,7 @@ export const POST = withAuth(async (req: NextRequest, { params }: RouteContext) 
   }
 
   try {
-    const ticketType = await createTicketType(params.id, result.data, user.id, user.role);
+    const ticketType = await createTicketType(resolvedParams.id, result.data, user.id, user.role);
     return successResponse(ticketType, null, 201);
   } catch (err) {
     if (AppError.isAppError(err)) return errorResponse(err.code, err.message, err.httpStatus);

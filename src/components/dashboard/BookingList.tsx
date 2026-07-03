@@ -62,7 +62,7 @@ export function BookingList({ bookings }: BookingListProps) {
     return (
       <div className="text-center py-12 text-muted-foreground">
         You have no bookings yet.{" "}
-        <a href="/" className="underline hover:text-foreground">Browse events</a>
+        <Link href="/" className="underline hover:text-foreground">Browse events</Link>
       </div>
     );
   }
@@ -73,7 +73,7 @@ export function BookingList({ bookings }: BookingListProps) {
         {localBookings.map((booking) => (
           <div
             key={booking.id}
-            className="border rounded-lg p-4 flex items-center justify-between gap-4 hover:bg-accent/30 transition-colors"
+            className="glass rounded-xl p-5 flex items-center justify-between gap-4 hover-card-up"
           >
             <div className="flex-1 min-w-0">
               <p className="font-medium text-sm truncate">{booking.event.title}</p>

@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useAuthStore } from "@/src/lib/stores/auth.store";
 import { apiClient } from "@/src/lib/api/client";
@@ -8,6 +9,11 @@ import { useRouter } from "next/navigation";
 export function Navbar() {
   const { user, clearAuth, isAuthenticated } = useAuthStore();
   const router = useRouter();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -20,10 +26,10 @@ export function Navbar() {
   };
 
   return (
-    <nav className="border-b bg-background sticky top-0 z-40">
+    <nav className="border-b border-border/50 bg-background/60 backdrop-blur-md sticky top-0 z-40 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         {/* Logo */}
-        <Link href="/" className="font-bold text-xl tracking-tight">
+        <Link href="/" className="font-bold text-2xl tracking-tight text-gradient">
           TicketHub
         </Link>
 
@@ -33,7 +39,7 @@ export function Navbar() {
             Events
           </Link>
 
-          {isAuthenticated() && user && (
+          {mounted && isAuthenticated() && user && (
             <>
               <Link
                 href="/dashboard"
@@ -69,7 +75,7 @@ export function Navbar() {
             </>
           )}
 
-          {!isAuthenticated() && (
+          {mounted && !isAuthenticated() && (
             <>
               <Link
                 href="/login"

@@ -6,12 +6,14 @@ import { UpdateVenueInputSchema } from "@/src/lib/schemas/venue.schema";
 import { getVenueById, updateVenue, softDeleteVenue } from "@/src/lib/services/venue.service";
 import { AppError } from "@/src/lib/errors";
 
-type RouteContext = { params: Record<string, string> };
+type RouteContext = { params: Promise<Record<string, string>> };
 
 // GET /api/v1/venues/:id — public
 export async function GET(_req: NextRequest, { params }: RouteContext) {
+  const resolvedParams = await params;
+
   try {
-    const venue = await getVenueById(params.id);
+    const venue = await getVenueById(resolvedParams.id);
     return successResponse(venue);
   } catch (err) {
     if (AppError.isAppError(err)) return errorResponse(err.code, err.message, err.httpStatus);
@@ -23,6 +25,8 @@ export async function GET(_req: NextRequest, { params }: RouteContext) {
 // PUT /api/v1/venues/:id — Admin only
 export const PUT = withAuth(
   withRoles(["ADMIN"], async (req: NextRequest, { params }: RouteContext) => {
+  const resolvedParams = await params;
+
     let body: unknown;
     try {
       body = await req.json();
@@ -39,7 +43,7 @@ export const PUT = withAuth(
     }
 
     try {
-      const venue = await updateVenue(params.id, result.data);
+      const venue = await updateVenue(resolvedParams.id, result.data);
       return successResponse(venue);
     } catch (err) {
       if (AppError.isAppError(err)) return errorResponse(err.code, err.message, err.httpStatus);
@@ -52,8 +56,10 @@ export const PUT = withAuth(
 // DELETE /api/v1/venues/:id — Admin only
 export const DELETE = withAuth(
   withRoles(["ADMIN"], async (_req: NextRequest, { params }: RouteContext) => {
+  const resolvedParams = await params;
+
     try {
-      await softDeleteVenue(params.id);
+      await softDeleteVenue(resolvedParams.id);
       return new NextResponse(null, { status: 204 });
     } catch (err) {
       if (AppError.isAppError(err)) return errorResponse(err.code, err.message, err.httpStatus);

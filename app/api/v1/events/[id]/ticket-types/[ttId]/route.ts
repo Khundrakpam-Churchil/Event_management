@@ -5,10 +5,12 @@ import { UpdateTicketTypeInputSchema } from "@/src/lib/schemas/ticketType.schema
 import { updateTicketType, softDeleteTicketType } from "@/src/lib/services/ticketType.service";
 import { AppError } from "@/src/lib/errors";
 
-type RouteContext = { params: Record<string, string> };
+type RouteContext = { params: Promise<Record<string, string>> };
 
 // PUT /api/v1/events/:id/ticket-types/:ttId — owner Organizer or Admin
 export const PUT = withAuth(async (req: NextRequest, { params }: RouteContext) => {
+  const resolvedParams = await params;
+
   const user = (req as AuthenticatedRequest).user;
 
   let body: unknown;
@@ -27,7 +29,7 @@ export const PUT = withAuth(async (req: NextRequest, { params }: RouteContext) =
   }
 
   try {
-    const ticketType = await updateTicketType(params.ttId, result.data, user.id, user.role);
+    const ticketType = await updateTicketType(resolvedParams.ttId, result.data, user.id, user.role);
     return successResponse(ticketType);
   } catch (err) {
     if (AppError.isAppError(err)) return errorResponse(err.code, err.message, err.httpStatus);
@@ -41,10 +43,12 @@ export const PATCH = PUT;
 
 // DELETE /api/v1/events/:id/ticket-types/:ttId — owner Organizer or Admin
 export const DELETE = withAuth(async (req: NextRequest, { params }: RouteContext) => {
+  const resolvedParams = await params;
+
   const user = (req as AuthenticatedRequest).user;
 
   try {
-    await softDeleteTicketType(params.ttId, user.id, user.role);
+    await softDeleteTicketType(resolvedParams.ttId, user.id, user.role);
     return new NextResponse(null, { status: 204 });
   } catch (err) {
     if (AppError.isAppError(err)) return errorResponse(err.code, err.message, err.httpStatus);

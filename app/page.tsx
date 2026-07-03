@@ -59,11 +59,25 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   const categories = categoriesRes.status === "fulfilled" ? categoriesRes.value.data ?? [] : [];
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Upcoming Events</h1>
-        <p className="text-muted-foreground mt-1">Discover and book tickets for events near you.</p>
-      </div>
+    <div className="space-y-12">
+      {/* Hero Section */}
+      <section className="relative px-4 pt-20 pb-24 text-center overflow-hidden">
+        <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/20 via-background to-background"></div>
+        <div className="max-w-4xl mx-auto space-y-6">
+          <h1 className="text-5xl font-extrabold tracking-tight sm:text-7xl">
+            Discover <span className="text-gradient">Unforgettable</span> Events
+          </h1>
+          <p className="text-lg text-muted-foreground sm:text-xl max-w-2xl mx-auto">
+            Your gateway to the best concerts, conferences, and community gatherings near you. Secure your tickets in seconds.
+          </p>
+        </div>
+      </section>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16 space-y-8">
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight">Trending Now</h2>
+          <p className="text-muted-foreground mt-1">Don&apos;t miss out on these popular events.</p>
+        </div>
 
       <Suspense>
         <EventFilters categories={categories} />
@@ -78,6 +92,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
           />
         </Suspense>
       </ErrorBoundary>
+      </div>
     </div>
   );
 }
