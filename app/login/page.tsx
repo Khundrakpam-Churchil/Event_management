@@ -33,6 +33,9 @@ export default function LoginPage() {
       );
       setAuth(res.data.user, res.data.token);
       
+      // Set the auth-token cookie so Server Components and middleware can read it
+      document.cookie = `auth-token=${res.data.token}; path=/; max-age=86400; SameSite=Lax`;
+      
       if (res.data.user.role === "ADMIN") {
         router.push("/admin");
       } else {

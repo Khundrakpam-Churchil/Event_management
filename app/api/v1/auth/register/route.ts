@@ -1,8 +1,8 @@
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/src/lib/prisma";
 import { signToken } from "@/src/lib/jwt";
-import { successResponse, errorResponse } from "@/src/lib/api/response";
+import { errorResponse } from "@/src/lib/api/response";
 import { RegisterInputSchema } from "@/src/lib/schemas/auth.schema";
 import { checkRateLimit, AUTH_RATE_LIMIT } from "@/src/lib/rate-limit";
 import { AppError } from "@/src/lib/errors";
@@ -44,7 +44,20 @@ export async function POST(req: NextRequest) {
 
     const token = signToken({ sub: user.id, email: user.email, role: user.role });
 
-    return successResponse({ token, user }, null, 201);
+    // Build response and set auth-token cookie directly on it
+    const response = NextResponse.json(
+      { success: true, data: { token, user }, meta: null },
+      { status: 201 }
+    );
+
+    response.cookies.set("auth-token", token, {
+      path: "/",
+      maxAge: 86400,
+      sameSite: "lax",
+      httpOnly: false,
+    });
+
+    return response;
   } catch (err) {
     if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
       return errorResponse("EMAIL_ALREADY_EXISTS", "An account with this email already exists.", 409);
@@ -56,3 +69,4 @@ export async function POST(req: NextRequest) {
     return errorResponse("INTERNAL_SERVER_ERROR", "An unexpected error occurred.", 500);
   }
 }
+

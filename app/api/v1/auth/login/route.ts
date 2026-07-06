@@ -1,8 +1,8 @@
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/src/lib/prisma";
 import { signToken } from "@/src/lib/jwt";
-import { successResponse, errorResponse } from "@/src/lib/api/response";
+import { errorResponse } from "@/src/lib/api/response";
 import { LoginInputSchema } from "@/src/lib/schemas/auth.schema";
 import { checkRateLimit, AUTH_RATE_LIMIT } from "@/src/lib/rate-limit";
 
@@ -46,18 +46,33 @@ export async function POST(req: NextRequest) {
 
     const token = signToken({ sub: user.id, email: user.email, role: user.role });
 
-    return successResponse({
-      token,
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        createdAt: user.createdAt,
+    // Build response and set auth-token cookie directly on it
+    const response = NextResponse.json({
+      success: true,
+      data: {
+        token,
+        user: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          createdAt: user.createdAt,
+        },
       },
+      meta: null,
     });
+
+    response.cookies.set("auth-token", token, {
+      path: "/",
+      maxAge: 86400,
+      sameSite: "lax",
+      httpOnly: false,
+    });
+
+    return response;
   } catch (err) {
     console.error("[login]", err);
     return errorResponse("INTERNAL_SERVER_ERROR", "An unexpected error occurred.", 500);
   }
 }
+

@@ -13,7 +13,7 @@ const AUTH_RATE_LIMITED = ["/api/v1/auth/register", "/api/v1/auth/login"];
 const BOOKING_RATE_LIMITED = ["/api/v1/bookings"];
 
 // Frontend pages that require authentication — redirect to /login if no token
-const PROTECTED_PAGES = ["/dashboard", "/checkout", "/organizer", "/admin"];
+const PROTECTED_PAGES = ["/dashboard", "/checkout", "/organizer"];
 
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
@@ -67,38 +67,9 @@ export function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  // JWT verification for all other /api/v1/* routes
-  const authHeader = req.headers.get("authorization");
-  if (!authHeader?.startsWith("Bearer ")) {
-    return NextResponse.json(
-      { success: false, error: { code: "UNAUTHORIZED", message: "Authentication is required." } },
-      { status: 401 }
-    );
-  }
-
-  const token = authHeader.slice(7);
-  const secret = process.env.JWT_SECRET;
-
-  if (!secret) {
-    return NextResponse.json(
-      { success: false, error: { code: "INTERNAL_SERVER_ERROR", message: "An unexpected error occurred." } },
-      { status: 500 }
-    );
-  }
-
-  try {
-    const payload = verifyToken(token);
-    const requestHeaders = new Headers(req.headers);
-    requestHeaders.set("x-user-id", payload.sub);
-    requestHeaders.set("x-user-email", payload.email);
-    requestHeaders.set("x-user-role", payload.role);
-    return NextResponse.next({ request: { headers: requestHeaders } });
-  } catch {
-    return NextResponse.json(
-      { success: false, error: { code: "UNAUTHORIZED", message: "Invalid or expired authentication token." } },
-      { status: 401 }
-    );
-  }
+  // Allow the request to pass through to the API route handlers,
+  // which use `withAuth` or `verifyToken` in the Node.js runtime to verify the token.
+  return NextResponse.next();
 }
 
 export const config = {
@@ -107,6 +78,5 @@ export const config = {
     "/dashboard/:path*",
     "/checkout/:path*",
     "/organizer/:path*",
-    "/admin/:path*",
   ],
 };

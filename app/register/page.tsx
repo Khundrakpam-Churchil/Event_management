@@ -30,6 +30,7 @@ export default function RegisterPage() {
         data
       );
       setAuth(res.data.user, res.data.token);
+      document.cookie = `auth-token=${res.data.token}; path=/; max-age=86400; SameSite=Lax`;
       router.push("/dashboard");
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Registration failed. Please try again.";

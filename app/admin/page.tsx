@@ -1,43 +1,62 @@
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
+"use client";
+
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useAuthStore } from "@/src/lib/stores/auth.store";
+import { apiClient } from "@/src/lib/api/client";
 import { AdminNav } from "@/src/components/admin/AdminNav";
 import { UsersTable } from "@/src/components/admin/UsersTable";
 import { AdminDashboardStats } from "@/src/components/admin/AdminDashboardStats";
+import { JoiningDashboard } from "@/src/components/admin/JoiningDashboard";
 
 interface User { id: string; name: string; email: string; role: string; createdAt: string; }
+interface Stats { totalUsers: number; totalEvents: number; totalBookings: number; totalRevenue: number; }
 
-async function fetchAdminData(token: string, path: string) {
-  const baseUrl = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
-  const res = await fetch(`${baseUrl}/api/v1${path}`, {
-    headers: { Authorization: `Bearer ${token}` },
-    cache: "no-store",
-  });
-  if (!res.ok) return null;
-  const json = await res.json();
-  return json.data ?? null;
-}
+export default function AdminPage() {
+  const router = useRouter();
+  const { user, token } = useAuthStore();
+  const [users, setUsers] = useState<User[]>([]);
+  const [stats, setStats] = useState<Stats | null>(null);
+  const [loading, setLoading] = useState(true);
 
-export default async function AdminPage() {
-  const cookieStore = await cookies();
-  const token = cookieStore.get("auth-token")?.value;
+  useEffect(() => {
+    // Simple auth check — no cookies, no middleware, no server round-trip
+    if (!token || !user) {
+      router.replace("/login?returnUrl=/admin");
+      return;
+    }
+    if (user.role !== "ADMIN") {
+      router.replace("/");
+      return;
+    }
 
-  if (!token) redirect("/login?returnUrl=/admin");
+    // Fetch admin data using apiClient (auto-attaches Bearer token)
+    async function loadData() {
+      try {
+        const [usersRes, statsRes] = await Promise.all([
+          apiClient.get<User[]>("/admin/users"),
+          apiClient.get<Stats>("/admin/stats"),
+        ]);
+        setUsers(usersRes.data ?? []);
+        setStats(statsRes.data ?? null);
+      } catch (err) {
+        console.error("Failed to load admin data:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadData();
+  }, [token, user, router]);
 
-  // Verify admin role
-  const baseUrl = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
-  const meRes = await fetch(`${baseUrl}/api/v1/auth/me`, {
-    headers: { Authorization: `Bearer ${token}` },
-    cache: "no-store",
-  });
+  if (!user || user.role !== "ADMIN") return null;
 
-  if (!meRes.ok) redirect("/login?returnUrl=/admin");
-  const meJson = await meRes.json();
-  if (meJson.data?.user?.role !== "ADMIN") redirect("/");
-
-  const [users, stats] = await Promise.all([
-    fetchAdminData(token, "/admin/users"),
-    fetchAdminData(token, "/admin/stats"),
-  ]);
+  if (loading) {
+    return (
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
+        <p className="text-muted-foreground text-center py-20">Loading admin dashboard…</p>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
@@ -49,10 +68,13 @@ export default async function AdminPage() {
 
       {stats && <AdminDashboardStats stats={stats} />}
 
+      <JoiningDashboard users={users} />
+
       <section className="glass rounded-xl p-6">
-        <h2 className="text-xl font-semibold mb-4">Recent Users ({users?.length ?? 0})</h2>
-        <UsersTable users={users ?? []} />
+        <h2 className="text-xl font-semibold mb-4">Recent Users ({users.length})</h2>
+        <UsersTable users={users} />
       </section>
     </div>
   );
 }
+
