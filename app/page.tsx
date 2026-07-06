@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { EventGrid, EventGridSkeleton } from "@/src/components/events/EventGrid";
 import { EventFilters } from "@/src/components/events/EventFilters";
 import { ErrorBoundary } from "@/src/components/layout/ErrorBoundary";
+import { UiDesignShowcase } from "@/src/components/layout/UiDesignShowcase";
 
 interface SearchParams {
   q?: string;
@@ -60,7 +61,6 @@ export default async function HomePage({ searchParams }: HomePageProps) {
 
   return (
     <div className="space-y-12">
-      {/* Hero Section */}
       <section className="relative px-4 pt-20 pb-24 text-center overflow-hidden">
         <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/20 via-background to-background"></div>
         <div className="max-w-4xl mx-auto space-y-6">
@@ -79,19 +79,26 @@ export default async function HomePage({ searchParams }: HomePageProps) {
           <p className="text-muted-foreground mt-1">Don&apos;t miss out on these popular events.</p>
         </div>
 
-      <Suspense>
-        <EventFilters categories={categories} />
-      </Suspense>
+        <UiDesignShowcase />
 
-      <ErrorBoundary>
-        <Suspense fallback={<EventGridSkeleton />}>
-          <EventGrid
-            events={events}
-            page={page}
-            totalPages={meta?.totalPages ?? 1}
-          />
+        <div className="pt-4">
+          <h2 className="text-2xl font-semibold">Upcoming Events</h2>
+          <p className="text-muted-foreground mt-1">Discover and book tickets for events near you.</p>
+        </div>
+
+        <Suspense>
+          <EventFilters categories={categories} />
         </Suspense>
-      </ErrorBoundary>
+
+        <ErrorBoundary>
+          <Suspense fallback={<EventGridSkeleton />}>
+            <EventGrid
+              events={events}
+              page={page}
+              totalPages={meta?.totalPages ?? 1}
+            />
+          </Suspense>
+        </ErrorBoundary>
       </div>
     </div>
   );
